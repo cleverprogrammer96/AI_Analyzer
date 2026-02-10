@@ -1,4 +1,5 @@
 import React from 'react';
+import ContractResponse from './ContractResponse';
 
 const Message = ({ message }) => {
   const { role, content, isError } = message;
@@ -13,13 +14,12 @@ const Message = ({ message }) => {
       </div>
       <div className="message-content">
         <div className="message-text">
-          {typeof content === 'string' ? (
+          {isUser ? (
+            // User messages are always plain text
             <p>{content}</p>
           ) : (
-            // Handle structured content if needed
-            <div className="structured-content">
-              {JSON.stringify(content, null, 2)}
-            </div>
+            // Assistant messages can be structured or plain text
+            <ContractResponse data={content} />
           )}
         </div>
       </div>
