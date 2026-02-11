@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import MessageList from '../components/MessageList';
+import ComparisonMessage from '../components/ComparisonMessage';
 import ChatInput from '../components/ChatInput';
+import LoadingIndicator from '../components/LoadingIndicator';
 import { generateResponse } from '../services/api';
 
 const ContractComparisonPage = () => {
@@ -64,7 +65,6 @@ const ContractComparisonPage = () => {
   };
 
   const handleFileUpload = (uploadedFiles, response) => {
-    // Handle file upload for comparison
     console.log('Files uploaded for comparison:', uploadedFiles, response);
   };
 
@@ -101,11 +101,25 @@ const ContractComparisonPage = () => {
             </div>
           </div>
         ) : (
-          <MessageList 
-            messages={messages} 
-            streamingMessage={streamingMessage}
-            isLoading={isLoading}
-          />
+          <div className="message-list">
+            {messages.map((message) => (
+              <ComparisonMessage key={message.id} message={message} />
+            ))}
+            
+            {streamingMessage && (
+              <div className="streaming-message">
+                <div className="message assistant-message">
+                  <div className="message-avatar">
+                    <div className="avatar-icon assistant-avatar">AI</div>
+                  </div>
+                  <div className="message-content">
+                    <div className="message-status">{streamingMessage}</div>
+                    <LoadingIndicator />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>
