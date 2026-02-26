@@ -2,11 +2,11 @@ import React from 'react';
 import Message from './Message';
 import LoadingIndicator from './LoadingIndicator';
 
-const MessageList = ({ messages, streamingMessage, isLoading }) => {
+const MessageList = ({ messages, streamingMessage, isLoading, onExcerptClick }) => {
   return (
     <div className="message-list">
       {messages.map((message) => (
-        <Message key={message.id} message={message} />
+        <Message key={message.id} message={message} onExcerptClick={onExcerptClick} />
       ))}
       
       {streamingMessage && (

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import ComparisonMessage from '../components/ComparisonMessage';
+import ComparisonMessage from './ComparisonMessage';
 import ChatInput from '../components/ChatInput';
 import LoadingIndicator from '../components/LoadingIndicator';
 import { generateResponse } from '../services/api';

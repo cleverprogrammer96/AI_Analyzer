@@ -1,9 +1,12 @@
+import './pdf-config';
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import ChatLayout from './layouts/ChatLayout';
 import ChatPage from './pages/ChatPage';
 import ContractComparisonPage from './pages/ContractComparisonPage';
+import PDFChatPage from './pages/PDFChatPage';
 import './styles/App.css';
+import './styles/PDFChat.css';
 
 function App() {
   return (

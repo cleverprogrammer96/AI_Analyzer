@@ -1,7 +1,7 @@
 import React from 'react';
 import ContractResponse from './ContractResponse';
 
-const Message = ({ message }) => {
+const Message = ({ message, onExcerptClick }) => {
   const { role, content, isError } = message;
   const isUser = role === 'user';
 
@@ -19,7 +19,7 @@ const Message = ({ message }) => {
             <p>{content}</p>
           ) : (
             // Assistant messages can be structured or plain text
-            <ContractResponse data={content} />
+            <ContractResponse data={content} onExcerptClick={onExcerptClick} />
           )}
         </div>
       </div>

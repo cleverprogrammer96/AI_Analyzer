@@ -1,14 +1,25 @@
 import React from 'react';
 
-const ContractResponse = ({ data }) => {
+const ContractResponse = ({ data, onExcerptClick }) => {
+  // Handle backend response wrapper { "result": "..." }
+  if (data && typeof data === 'object' && data.result) {
+    data = data.result;
+  }
+
   // Handle if data is a string (fallback)
   if (typeof data === 'string') {
     try {
       const parsed = JSON.parse(data);
       data = parsed;
     } catch (e) {
+      // If parsing fails, render as plain text
       return <p>{data}</p>;
     }
+  }
+
+  // If data is not an object or is null, render as string
+  if (!data || typeof data !== 'object') {
+    return <p>{String(data)}</p>;
   }
 
   const { 
@@ -71,9 +82,16 @@ const ContractResponse = ({ data }) => {
               </div>
             )}
             {excerpt && (
-              <div className="excerpt-box">
+              <div 
+                className={`excerpt-box ${onExcerptClick ? 'clickable' : ''}`}
+                onClick={() => onExcerptClick && onExcerptClick(excerpt)}
+                title={onExcerptClick ? "Click to highlight in PDF" : ""}
+              >
                 <p className="excerpt-label">Original Text:</p>
                 <p className="excerpt-text">{excerpt}</p>
+                {onExcerptClick && (
+                  <span className="click-hint">👆 Click to highlight in PDF</span>
+                )}
               </div>
             )}
             {excerpt_translation_en && (
