@@ -1,68 +1,103 @@
-import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '../ui/Button';
-import { PlusIcon, MessageIcon } from '../ui/Icons';
+import React, { useState, useEffect } from 'react';
+import { fetchConversations } from '../services/conversationApi';
 
-const Sidebar = ({ chatHistory = [], onNewChat }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+const Sidebar = ({ onSelectConversation, currentConversationId }) => {
+  const [conversations, setConversations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleNewChat = () => {
-    if (onNewChat) {
-      onNewChat();
+  // Load conversations on mount
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  const loadConversations = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const data = await fetchConversations();
+      setConversations(data);
+    } catch (err) {
+      console.error('Failed to load conversations:', err);
+      setError('Failed to load conversations');
+    } finally {
+      setIsLoading(false);
     }
-    navigate('/chat');
   };
 
-  const handleChatClick = (chatId) => {
-    // Navigate to specific chat or load chat history
-    console.log('Load chat:', chatId);
+  const handleConversationClick = (conversationId) => {
+    if (onSelectConversation) {
+      onSelectConversation(conversationId);
+    }
+  };
+
+  const handleNewChat = () => {
+    if (onSelectConversation) {
+      onSelectConversation(null); // null means new chat
+    }
   };
 
   return (
-    <aside className="sidebar">
+    <div className="sidebar">
       <div className="sidebar-header">
-        <Button 
-          variant="primary" 
-          className="new-chat-btn"
-          onClick={handleNewChat}
-          aria-label="Start new chat"
-        >
-          <PlusIcon />
-          <span>New Chat</span>
-        </Button>
+        <button className="new-chat-btn" onClick={handleNewChat}>
+          + New Chat
+        </button>
       </div>
 
       <div className="sidebar-content">
-        <div className="chat-history">
-          {chatHistory.length === 0 ? (
-            <p className="empty-state">No chat history yet</p>
-          ) : (
-            <div className="chat-list">
-              {chatHistory.map((chat) => (
-                <div 
-                  key={chat.id} 
-                  className="chat-item"
-                  onClick={() => handleChatClick(chat.id)}
-                >
-                  <MessageIcon size={16} />
-                  <div className="chat-info">
-                    <span className="chat-title">{chat.title}</span>
-                    <span className="chat-meta">{chat.timestamp}</span>
+        {isLoading ? (
+          <div className="sidebar-loading">
+            <div className="loading-spinner"></div>
+            <p>Loading chats...</p>
+          </div>
+        ) : error ? (
+          <div className="sidebar-error">
+            <p>{error}</p>
+            <button onClick={loadConversations} className="retry-btn">
+              Retry
+            </button>
+          </div>
+        ) : conversations.length === 0 ? (
+          <div className="sidebar-empty">
+            <p>No conversations yet</p>
+            <p className="sidebar-empty-hint">Start a new chat to begin</p>
+          </div>
+        ) : (
+          <div className="conversation-list">
+            {conversations.map((conversation) => (
+              <div
+                key={conversation.id || conversation.conversationId}
+                className={`conversation-item ${
+                  currentConversationId === (conversation.id || conversation.conversationId)
+                    ? 'active'
+                    : ''
+                }`}
+                onClick={() => handleConversationClick(conversation.id || conversation.conversationId)}
+              >
+                <div className="conversation-icon">💬</div>
+                <div className="conversation-details">
+                  <div className="conversation-title">
+                    {conversation.title || conversation.name || 'Untitled Chat'}
                   </div>
+                  {conversation.lastMessage && (
+                    <div className="conversation-preview">
+                      {conversation.lastMessage}
+                    </div>
+                  )}
+                  {conversation.timestamp && (
+                    <div className="conversation-time">
+                      {new Date(conversation.timestamp).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      <div className="sidebar-footer">
-        <div className="user-info">
-          <span className="user-name">Contract Assistant</span>
-        </div>
-      </div>
-    </aside>
+    </div>
   );
 };
 

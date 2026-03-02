@@ -3,6 +3,9 @@ import MessageList from '../components/MessageList';
 import ChatInput from '../components/ChatInput';
 import PDFViewer from '../components/PDFViewer';
 import { generateResponse } from '../services/api';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { fetchConversation, transformMessages } from '../services/conversationApi';
+
 
 const ChatPage = () => {
   const [messages, setMessages] = useState([]);
@@ -11,6 +14,11 @@ const ChatPage = () => {
   const [showPdf, setShowPdf] = useState(false);
   const [highlightText, setHighlightText] = useState(null);
   const messagesEndRef = useRef(null);
+
+  const [searchParams] = useSearchParams();
+  const conversationId = searchParams.get('conversationId');
+  const [currentConversationId, setCurrentConversationId] = useState(null);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
 
   // Local PDF file path - put your PDF in public folder
   const localPdfPath = '/sample-contract.pdf';
@@ -22,6 +30,46 @@ const ChatPage = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
+
+  useEffect(() => {
+  if (!conversationId) {
+    // No conversation ID - this is a new chat
+    setCurrentConversationId(null);
+    setMessages([]);
+    return;
+  }
+
+  if (conversationId === currentConversationId) {
+    // Already loaded this conversation
+    return;
+  }
+
+  // Load conversation from backend
+  const loadConversation = async () => {
+    setIsLoadingConversation(true);
+    try {
+      const data = await fetchConversation(conversationId);
+      const transformedMessages = transformMessages(data.messages || []);
+      setMessages(transformedMessages);
+      setCurrentConversationId(conversationId);
+    } catch (error) {
+      console.error('Failed to load conversation:', error);
+      // Show error message
+      const errorMessage = {
+        id: Date.now(),
+        role: 'assistant',
+        content: 'Failed to load conversation. Please try again.',
+        timestamp: new Date().toISOString(),
+        isError: true,
+      };
+      setMessages([errorMessage]);
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
+
+  loadConversation();
+}, [conversationId, currentConversationId]);
 
   const handleSendMessage = async (content) => {
     if (!content.trim() || isLoading) return;
@@ -151,6 +199,10 @@ const ChatPage = () => {
             />
           )}
           <div ref={messagesEndRef} />
+        </div>
+
+        <div>
+          <button onClick={() => handleExcerptClick("with")}>Click me buddy</button>
         </div>
         
         <ChatInput 
