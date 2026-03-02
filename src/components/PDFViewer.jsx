@@ -37,6 +37,60 @@ const PDFViewer = ({ file, highlightText, onLoadSuccess, onClose }) => {
     [highlightText]
   );
 
+  // NEW: DOM-based highlighting (works with phrases!)
+  useEffect(() => {
+    if (!normalizedHighlight) return;
+
+    console.log('Attempting to highlight:', normalizedHighlight);
+
+    // Wait for text layer to render
+    const timer = setTimeout(() => {
+      const textLayer = document.querySelector('.react-pdf__Page__textContent');
+      if (!textLayer) {
+        console.log('Text layer not found');
+        return;
+      }
+
+      // Get all text spans
+      const spans = textLayer.querySelectorAll('span');
+      console.log('Found spans:', spans.length);
+
+      let found = false;
+
+      spans.forEach((span) => {
+        const text = span.textContent.toLowerCase();
+        
+        // Check if this span contains the search text
+        if (text.includes(normalizedHighlight)) {
+          span.style.backgroundColor = 'yellow';
+          span.style.padding = '2px';
+          span.style.borderRadius = '2px';
+          found = true;
+          console.log('Highlighted span:', span.textContent);
+        }
+      });
+
+      if (!found) {
+        console.log('Text not found in any span');
+        console.log('Searching for:', normalizedHighlight);
+      }
+    }, 500); // Wait for text layer to render
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timer);
+      const textLayer = document.querySelector('.react-pdf__Page__textContent');
+      if (textLayer) {
+        const spans = textLayer.querySelectorAll('span');
+        spans.forEach((span) => {
+          span.style.backgroundColor = '';
+          span.style.padding = '';
+          span.style.borderRadius = '';
+        });
+      }
+    };
+  }, [normalizedHighlight, pageNumber]);
+
   const onDocumentLoadSuccess = ({ numPages }) => {
     setNumPages(numPages);
     setError(null);
@@ -58,22 +112,6 @@ const PDFViewer = ({ file, highlightText, onLoadSuccess, onClose }) => {
 
   const goToNextPage = () => {
     setPageNumber((prev) => Math.min(prev + 1, numPages));
-  };
-
-  // Highlight text callback
-  const customTextRenderer = (textItem) => {
-    const rawText = textItem?.str || '';
-    if (!normalizedHighlight) return rawText;
-
-    const text = rawText;
-    
-    if (text.toLowerCase().includes(normalizedHighlight)) {
-      return (
-        <mark className="pdf-highlight">{text}</mark>
-      );
-    }
-    
-    return text;
   };
 
   console.log('PDFViewer rendering with file:', file);
@@ -141,7 +179,6 @@ const PDFViewer = ({ file, highlightText, onLoadSuccess, onClose }) => {
               pageNumber={pageNumber}
               renderTextLayer={true}
               renderAnnotationLayer={false}
-              customTextRenderer={customTextRenderer}
               onRenderError={onDocumentLoadError}
               width={pageWidth}
             />

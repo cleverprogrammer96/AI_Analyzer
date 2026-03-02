@@ -7,6 +7,7 @@ import ContractComparisonPage from './pages/ContractComparisonPage';
 import PDFChatPage from './pages/PDFChatPage';
 import './styles/App.css';
 import './styles/PDFChat.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 
 function App() {
   return (
